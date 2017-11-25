@@ -31,6 +31,7 @@ module.exports = loadSegmentio = _.once ->
       analytics[method] = analytics.factory method
 
     analytics.load = (t) ->
+
       e = document.createElement 'script'
       e.type = 'text/javascript'
       e.async = true
@@ -41,6 +42,6 @@ module.exports = loadSegmentio = _.once ->
       accept(analytics)
       return
 
-    analytics.SNIPPET_VERSION = '3.1.0'
-    analytics.load 'yJpJZWBw68fEj0aPSv8ffMMgof5kFnU9'
+    #analytics.SNIPPET_VERSION = '3.1.0'
+    #analytics.load 'yJpJZWBw68fEj0aPSv8ffMMgof5kFnU9'
     #analytics.page()  # Don't track the page view on initial inclusion
