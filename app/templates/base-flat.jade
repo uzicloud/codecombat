@@ -163,7 +163,7 @@ mixin accountLinks
         br.hidden-lg.hidden-md
         if !me.isStudent()
           .contact-info.rtl-allowed
-            span.spr(data-i18n="nav.help_pref")
-            - var supportEmail = (me.get('preferredLanguage', true) || 'en-US').split('-')[0] == 'nl' ? 'klantenservice@codecombat.nl' : 'team@codecombat.com';
-            a(href="mailto:" + supportEmail)= supportEmail
-            span.spl(data-i18n="nav.help_suff")
+            //span.spr(data-i18n="nav.help_pref")
+            //- var supportEmail = (me.get('preferredLanguage', true) || 'en-US').split('-')[0] == 'nl' ? 'klantenservice@codecombat.nl' : 'team@codecombat.com';
+            //a(href="mailto:" + supportEmail)= supportEmail
+            //span.spl(data-i18n="nav.help_suff")

@@ -20,7 +20,7 @@
             .product
               h4 x#{product.get('gems')}
               h3(data-i18n=view.getProductDescription(product.get('name')))
-              button.btn.btn-illustrated.btn-lg(value=product.get('name'))
+              button.btn.btn-illustrated.btn-lg.disabled(value=product.get('name'))
                 span= product.get('priceString')
   
           if (me.get('preferredLanguage',true) || 'en-US').split('-')[0] == 'nl'
