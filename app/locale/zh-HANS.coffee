@@ -1,5 +1,6 @@
 module.exports = nativeDescription: "简体中文", englishDescription: "Chinese (Simplified)", translation:
   new_home:
+    qq_group: "QQ群"
     slogan: "最引人入胜的编程游戏。"
     classroom_edition: "教育版："
     learn_to_code: "学习编程："
