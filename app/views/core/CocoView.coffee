@@ -1,5 +1,5 @@
 SuperModel = require 'models/SuperModel'
-nanoScroller = require('nanoscroller')
+require('nanoscroller')
 utils = require 'core/utils'
 CocoClass = require 'core/CocoClass'
 loadingScreenTemplate = require 'templates/core/loading'
