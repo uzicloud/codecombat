@@ -23,6 +23,7 @@ fixture = {
 describe 'POST /db/trial.request', ->
   
   beforeEach utils.wrap (done) ->
+    console.log("test...")
     yield utils.clearModels([User, TrialRequest])
     spyOn(delighted, 'postPeople')
     done()

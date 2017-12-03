@@ -32,7 +32,7 @@ info:
     1. **Link the CodeCombat user to an OAuth identity** using [POST /api/users/:handle/o-auth-identities](#post-apiusershandleo-auth-identities).
     1. **Log the user in** by redirecting them to [/auth/login-o-auth](#get-authlogin-o-auth).
     
-host: codecombat.com
+host: codecombat.vip
 basePath: /api
 schemes:
   - https

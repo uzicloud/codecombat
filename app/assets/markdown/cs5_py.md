@@ -150,7 +150,7 @@ Throughout this activity, it may also be helpful to use the clock (if you have i
 **How does the `%` operator help wrap around an array?** (By calculating the remainder between a number and the array length so that you never try to access an index that is out of bounds.)
 
 ### Coding Time (25-40 mins)
-Allow the students to go through the game at their own pace, keeping notes about every level on paper or digital document. We recommend using following format, which you can also print out as templates: [Progress Journal [PDF]](http://files.codecombat.com/docs/resources/ProgressJournal.pdf)
+Allow the students to go through the game at their own pace, keeping notes about every level on paper or digital document. We recommend using following format, which you can also print out as templates: [Progress Journal [PDF]](http://files.codecombat.vip/docs/resources/ProgressJournal.pdf)
 
 ```
 Level #: _____  Level Name: ____________________________________

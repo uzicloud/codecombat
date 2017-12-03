@@ -82,6 +82,7 @@ module.exports = (env) => {
           { loader: 'css-loader' },
           { loader: 'sass-loader' },
         ] },
+        
       ],
     },
     resolve: {

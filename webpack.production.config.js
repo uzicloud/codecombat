@@ -68,5 +68,14 @@ module.exports = (env) => {
         logLevel: 'info',
       })
     )
+    .concat(
+      new webpack.optimize.UglifyJsPlugin({
+        comments: false,
+        compress: {
+            warnings: false,
+            drop_console: true
+        }
+      })
+    )
   })
 }

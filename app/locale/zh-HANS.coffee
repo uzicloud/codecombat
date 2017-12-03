@@ -724,21 +724,21 @@ module.exports = nativeDescription: "简体中文", englishDescription: "Chinese
     feature_websites: "构建网站和应用程序"
     feature_items: "装备更强大的物品"
     feature_learn: "学习制作游戏和网页" # {change}
-    month_price: "$__price__/月" # {change}
-    first_month_price: "第一个月仅需 $__price__！"
+    month_price: "¥__price__元/月" # {change}
+    first_month_price: "第一个月仅需 ¥__price__元！"
     lifetime: "终身订阅"
-    lifetime_price: "$__price__"
+    lifetime_price: "¥__price__元"
     year_subscription: "年度订阅"
-    year_price: "$__price__/年"
+    year_price: "¥__price__元/年"
     kids_message_1: "孩子们！我们会发送一封电子邮件给您的父母，以便他们可以为您购买订阅。"
     kids_message_2: "联系你的父母"
     support_part1: "付款时需要帮助? Email"
-    support_part2: "support@codecombat.com"
+    support_part2: "barry@codecombat.vip"
     support_part3: "如果您有任何问题。"
     you_are_purchasing_monthly_sub: "您正在购买月度高级订阅！"
     you_are_purchasing_year_sub: "您正在购买年度高级订阅！"
     you_are_purchasing_lifetime_sub: "您正在购买终身高级订阅！"
-    you_will_be_charged: "您将被一次性收取 $__priceString__ 。" # {change}
+    you_will_be_charged: "您将被一次性收取 ¥__priceString__元。" # {change}
     choose_payment_method: "选择付款方式"
     pay_with_credit_card_or_bitcoin: "用信用卡/比特币支付"
     paypal_payment_error: "PayPal收费时遇到错误。"

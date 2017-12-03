@@ -37,6 +37,7 @@ module.exports = FacebookHandler = class FacebookHandler extends CocoClass
     @apiLoaded = true
 
   loadAPI: (options={}) ->
+    return # do not load facebook api --barry
     options.success ?= _.noop
     options.context ?= options
     if @apiLoaded
@@ -57,7 +58,7 @@ module.exports = FacebookHandler = class FacebookHandler extends CocoClass
         js.async = true
         js.src = '//connect.facebook.net/en_US/sdk.js'
     
-        #js.src = '//connect.facebook.net/en_US/all/debug.js'
+        js.src = '//connect.facebook.net/en_US/all/debug.js'
         ref.parentNode.insertBefore js, ref
         return
       )(document)

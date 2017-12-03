@@ -8,7 +8,7 @@ describe 'APIClient', ->
   
   describe 'methods.hasControlOfUser', ->
     it 'gives the woo client control over users created on cp.codecombat.com', ->
-      codePlayUser = new User({createdOnHost: 'cp.codecombat.com'})
+      codePlayUser = new User({createdOnHost: 'codecombat.vip'})
       otherUser = new User()
       wooClient = new APIClient({_id: mongoose.Types.ObjectId('582a4105053eea2400e0c7e8')})
       otherClient = new APIClient()

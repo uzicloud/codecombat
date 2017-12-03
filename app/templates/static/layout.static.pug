@@ -1,23 +1,19 @@
 doctype html
 block begin
-html(lang='en')
+html(lang='zh-CN')
   head
     meta(charset='utf-8')
     meta(name='viewport', content='width=1024')
     meta(http-equiv='Accept-CH', content='Viewport-Width')
-    // Dexecure
-    title 以玩游戏的方式学编程
-    meta(name='description', content='Learn programming with a multiplayer live coding strategy game for beginners. Learn Python or JavaScript as you defeat ogres, solve mazes, and level up. Open source HTML5 game!')
+    title CodeCombat.vip|中文网 - 在游戏中学习编程
+    meta(name='description', content='CodeCombat是一个通过玩游戏来学习编程的网站，到目前为止，已经翻译成17种国外语言。在游戏中，通过代码实现角色的移动、对话、攻击、拾取和使用道具，在这个过程中玩家不知不觉中就了解了编程')
     link(rel='shortcut icon', href='/images/favicon.ico')
     link(rel='stylesheet', href='/' + shaTag + '/stylesheets/app.css')
-    script.
-      var DEXECURE_URL = "/dexecure-c167a5675c.js";
-      "serviceWorker"in navigator&&navigator.serviceWorker.register(DEXECURE_URL,{scope:'/'}).then(function(e){"/"!=new URL(e.scope).pathname&&console.log("Service worker scope is not /")})["catch"](function(e){console.log("Unable to register service worker.");console.log(e)});
-      // Placeholder for iPad, which inspects the user object at the bottom of an injected page.
     script(src='/' + shaTag + '/javascripts/esper.js', defer='')
+    script(src='/' + shaTag + '/javascripts/app.js', defer='', data-ace-base='/javascripts/ace') // This data tag needs to be on SOME script with a src for Ace to work
     if chunkPaths[viewName]
       script(src=chunkPaths[viewName], defer='')
-    script(src='/' + shaTag + '/javascripts/app.js', defer='', async='', data-ace-base='/javascripts/ace') // This data tag needs to be on SOME script with a src for Ace to work
+
     script(src='/user-data?sha=' + shaTag)
 
     // Webpack-inserted CSS:
@@ -44,7 +40,7 @@ html(lang='en')
               FastClick.attach(document.body);
           } catch (error) { }
         }
-  body.clearfix(onload='onLoad();')
+  body.clearfix(onload='onLoad();', lang="zh-HANS")
     #fb-root
     block content
     #modal-wrapper.modal-content.hide

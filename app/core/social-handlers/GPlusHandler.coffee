@@ -65,7 +65,7 @@ module.exports = GPlusHandler = class GPlusHandler extends CocoClass
       options.success.bind(options.context)()
     else
       @once 'load-api', options.success, options.context
-    
+    @startedLoading = true # add this to stop request --barry
     if not @startedLoading
       po = document.createElement('script')
       po.type = 'text/javascript'

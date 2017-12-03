@@ -14,7 +14,7 @@ if view.showAds()
         (adsbygoogle = window.adsbygoogle || []).push({});
 
   
-if showGameDevAlert
+if showGameDevAlert && false
   #game-dev-hoc-license-alert.alert.alert-success
     span(data-i18n="play.get_course_for_class")
     =" "
@@ -27,7 +27,7 @@ if showGameDevAlert
     
   else
     a(href="/").picoctf-hide
-      img.small-nav-logo(src="/images/pages/base/logo.png", title="CodeCombat - Learn how to code by playing a game", alt="CodeCombat")
+      img.small-nav-logo(src="/images/pages/base/logo.png", title="CodeCombat - 在游戏中学习编程", alt="CodeCombat")
   
     .picoctf-show
       a(href="http://staging.picoctf.com").picoctf-logo
@@ -179,7 +179,7 @@ if showGameDevAlert
   else
     .portal
       .portals
-        for campaignSlug in features.campaignSlugs || ['dungeon', 'beta-campaigns-1', 'forest', 'beta-campaigns-2', 'desert', 'mountain', 'glacier', 'volcano']
+        for campaignSlug in features.campaignSlugs || ['dungeon', 'forest',  'desert', 'mountain', 'glacier', 'volcano']
           if campaignSlug === 'beta-campaigns-1' || campaignSlug === 'beta-campaigns-2'
             - if (me.freeOnly()) continue;
             - var betaSlugs = campaignSlug === 'beta-campaigns-1' ? _.shuffle(['campaign-game-dev-1', 'campaign-web-dev-1']) : _.shuffle(['campaign-game-dev-2', 'campaign-web-dev-2']);
@@ -238,7 +238,7 @@ if showGameDevAlert
 
   .game-controls.header-font.picoctf-hide
     if !(features.picoCtf || features.brainPop)
-      if view.shouldShow('premium')
+      if view.shouldShow('premium') && false
         button.btn.premium-menu-icon(data-i18n="[title]subscribe.subscribe_modal_title")
       if view.shouldShow('poll')
         button.btn.poll.hidden(data-i18n="[title]play.poll")
@@ -279,8 +279,8 @@ if showGameDevAlert
             a(href="/account").player-name.spr= me.get('name')
           if !features.codePlay && !me.isStudent()
             button#logout-button.btn.btn-illustrated.btn-warning(data-i18n="login.log_out") Log Out
-          if me.isPremium()
-            button.btn.btn-illustrated.btn-primary(data-i18n="nav.contact", data-toggle="coco-modal", data-target="core/ContactModal") Contact
+          //if me.isPremium()
+          button.btn.btn-illustrated.btn-primary(data-i18n="nav.contact", data-toggle="coco-modal", data-target="core/ContactModal") Contact
 
   button.btn.btn-lg.btn-inverse.campaign-control-button.picoctf-hide#volume-button(data-i18n="[title]play.adjust_volume", title="Adjust volume")
     .glyphicon.glyphicon-volume-off
