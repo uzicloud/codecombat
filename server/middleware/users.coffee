@@ -29,11 +29,11 @@ utils = require '../lib/utils'
 CLASubmission = require '../models/CLASubmission'
 Prepaid = require '../models/Prepaid'
 crypto = require 'crypto'
-{ makeHostUrl } = require '../commons/urls'
+{makeHostUrl} = require '../commons/urls'
 
 module.exports =
   fetchByAge: wrap (req, res, next) ->
-    # Uses classroom ageRangeMin/Max fields to restrict age
+# Uses classroom ageRangeMin/Max fields to restrict age
     throw new errors.Unauthorized('You must be an administrator.') unless req.user?.isAdmin()
     minAge = parseInt(req.query.minAge) if req.query.minAge
     maxAge = parseInt(req.query.maxAge) if req.query.maxAge
@@ -45,7 +45,9 @@ module.exports =
       whereStatement = "parseInt(this.ageRangeMax) <= #{maxAge}"
     else
       throw new errors.UnprocessableEntity("minAge or maxAge required.")
-    classrooms = yield Classroom.find({$and: [{ageRangeMin: {$exists: true}}, {ageRangeMax: {$exists: true}}, {$where: whereStatement}]}, {members: 1}).lean()
+    classrooms = yield Classroom.find({
+      $and: [{ageRangeMin: {$exists: true}}, {ageRangeMax: {$exists: true}}, {$where: whereStatement}]
+    }, {members: 1}).lean()
     userIds = []
     for c in classrooms
       for id in c.members
@@ -86,13 +88,13 @@ module.exports =
     email = req.query.email
     return next() unless email
     if req.user?.isAdmin()
-      user = yield User.findOne({ emailLower: email.toLowerCase() })
-      throw new errors.NotFound('No user with that email', { errorID: 'no-user-with-that-email' }) unless user
+      user = yield User.findOne({emailLower: email.toLowerCase()})
+      throw new errors.NotFound('No user with that email', {errorID: 'no-user-with-that-email'}) unless user
       res.status(200).send(user.toObject({req}))
     else if req.user?.isTeacher()
-      user = yield User.findOne({ emailLower: email.toLowerCase() })
-      throw new errors.NotFound('No user with that email', { errorID: 'no-user-with-that-email' }) unless user
-      throw new errors.Forbidden('Teacher Accounts can only look up other Teacher Accounts.', { errorID: 'cant-fetch-nonteacher-by-email' }) unless user.isTeacher()
+      user = yield User.findOne({emailLower: email.toLowerCase()})
+      throw new errors.NotFound('No user with that email', {errorID: 'no-user-with-that-email'}) unless user
+      throw new errors.Forbidden('Teacher Accounts can only look up other Teacher Accounts.', {errorID: 'cant-fetch-nonteacher-by-email'}) unless user.isTeacher()
       trimUser = _.pick(user.toObject(), ['_id', 'email', 'firstName', 'lastName', 'name'])
       res.status(200).send(trimUser)
     else
@@ -145,23 +147,23 @@ module.exports =
 
   becomeStudent: wrap (req, res, next) ->
     userID = mongoose.Types.ObjectId(req.user.id)
-    yield Classroom.remove({ ownerID: userID }, false)
+    yield Classroom.remove({ownerID: userID}, false)
     userID = mongoose.Types.ObjectId(req.user.id)
-    yield User.update({ _id: userID }, { $set: { "role": "student" } })
+    yield User.update({_id: userID}, {$set: {"role": "student"}})
     user = yield User.findById req.user.id
     res.status(200).send(user.toObject({req: req}))
 
   verifyEmailAddress: wrap (req, res, next) ->
-    user = yield User.findOne({ _id: mongoose.Types.ObjectId(req.params.userID) })
+    user = yield User.findOne({_id: mongoose.Types.ObjectId(req.params.userID)})
     [timestamp, hash] = req.params.verificationCode.split(':')
     unless user
       throw new errors.UnprocessableEntity('User not found')
     unless req.params.verificationCode is user.verificationCode(timestamp)
       throw new errors.UnprocessableEntity('Verification code does not match')
-    yield user.update({ emailVerified: true })
-    user.set({ emailVerified: true })
+    yield user.update({emailVerified: true})
+    user.set({emailVerified: true})
     yield user.updateMailChimp()
-    res.status(200).send({ role: user.get('role') })
+    res.status(200).send({role: user.get('role')})
 
   sendVerificationEmail: wrap (req, res, next) ->
     user = yield User.findById(req.params.userID)
@@ -183,7 +185,8 @@ module.exports =
 
   getStudents: wrap (req, res, next) ->
     throw new errors.Unauthorized('You must be an administrator.') unless req.user?.isAdmin()
-    query = $or: [{role: 'student'}, {$and: [{schoolName: {$exists: true}}, {schoolName: {$ne: ''}}, {anonymous: false}]}]
+    query =
+      $or: [{role: 'student'}, {$and: [{schoolName: {$exists: true}}, {schoolName: {$ne: ''}}, {anonymous: false}]}]
     users = yield User.find(query).select('lastIP').lean()
     for user in users
       if ip = user.lastIP
@@ -209,42 +212,42 @@ module.exports =
       nces_district_students = trialRequest.get('properties').nces_district_students
       numStudents = trialRequest.get('properties').numStudents
       if numStudents in ['101-200', '201-500', '501-1000', '1000+']
-        return res.status(200).send({ priority: 'high' })
+        return res.status(200).send({priority: 'high'})
       else if numStudents in ['11-50', '51-100']
-        return res.status(200).send({ priority: 'medium' })
+        return res.status(200).send({priority: 'medium'})
       else if numStudents in ['1-10']
-        # this is the only outcome specifically used; determines if we try to sell them starter licenses
-        return res.status(200).send({ priority: 'low' })
-    return res.status(200).send({ priority: undefined })
+# this is the only outcome specifically used; determines if we try to sell them starter licenses
+        return res.status(200).send({priority: 'low'})
+    return res.status(200).send({priority: undefined})
 
   signupWithPassword: wrap (req, res) ->
     unless req.user.isAnonymous()
       throw new errors.Forbidden('You are already signed in.')
 
-    { name, email, password } = req.body
+    {name, email, password} = req.body
     unless password
       throw new errors.UnprocessableEntity('Requires password')
     if _.isEmpty(name) and _.isEmpty(email)
       throw new errors.UnprocessableEntity('Requires username or email')
 
     if yield User.findByEmail(email)
-      throw new errors.Conflict('Email already taken', { i18n: 'server_error.email_taken' })
+      throw new errors.Conflict('Email already taken', {i18n: 'server_error.email_taken'})
     if yield User.findByName(name)
-      throw new errors.Conflict('Username already taken', { i18n: 'server_error.username_taken' })
+      throw new errors.Conflict('Username already taken', {i18n: 'server_error.username_taken'})
 
-    req.user.set({ name, email, password, anonymous: false })
+    req.user.set({name, email, password, anonymous: false})
     yield module.exports.finishSignup(req, res)
 
   signupWithFacebook: wrap (req, res) ->
     unless req.user.isAnonymous()
       throw new errors.Forbidden('You are already signed in.')
 
-    { facebookID, facebookAccessToken, email, name } = req.body
+    {facebookID, facebookAccessToken, email, name} = req.body
     unless _.all([facebookID, facebookAccessToken, not _.isEmpty(email)])
       throw new errors.UnprocessableEntity('Requires facebookID, facebookAccessToken, and email')
 
     if name and yield User.findByName(name)
-      throw new errors.Conflict('Username already taken', { i18n: 'server_error.username_taken' })
+      throw new errors.Conflict('Username already taken', {i18n: 'server_error.username_taken'})
 
     facebookResponse = yield facebook.fetchMe(facebookAccessToken)
     emailsMatch = email is facebookResponse.email
@@ -254,9 +257,9 @@ module.exports =
 
     user = yield User.findByEmail(email)
     if user
-      throw new errors.Conflict('Email already taken', { i18n: 'server_error.email_taken' })
+      throw new errors.Conflict('Email already taken', {i18n: 'server_error.email_taken'})
 
-    userData = { facebookID, email, anonymous: false }
+    userData = {facebookID, email, anonymous: false}
     userData.name = name if name
     req.user.set(userData)
     yield module.exports.finishSignup(req, res)
@@ -265,12 +268,12 @@ module.exports =
     unless req.user.isAnonymous()
       throw new errors.Forbidden('You are already signed in.')
 
-    { gplusID, gplusAccessToken, email, name } = req.body
+    {gplusID, gplusAccessToken, email, name} = req.body
     unless _.all([gplusID, gplusAccessToken, not _.isEmpty(email)])
       throw new errors.UnprocessableEntity('Requires gplusID, gplusAccessToken, and email')
 
     if name and yield User.findByName(name)
-      throw new errors.Conflict('Username already taken', { i18n: 'server_error.username_taken' })
+      throw new errors.Conflict('Username already taken', {i18n: 'server_error.username_taken'})
 
     gplusResponse = yield gplus.fetchMe(gplusAccessToken)
     emailsMatch = email is gplusResponse.email
@@ -281,19 +284,20 @@ module.exports =
 
     user = yield User.findByEmail(email)
     if user
-      throw new errors.Conflict('Email already taken', { i18n: 'server_error.email_taken' })
+      throw new errors.Conflict('Email already taken', {i18n: 'server_error.email_taken'})
 
-    userData = { gplusID, email, anonymous: false }
+    userData = {gplusID, email, anonymous: false}
     userData.name = name if name
     req.user.set(userData)
     yield module.exports.finishSignup(req, res)
 
   finishSignup: co.wrap (req, res) ->
     try
+      req.user.set 'stripe', {free: '2017-12-31'}
       yield req.user.save()
     catch e
       if e.code is 11000 # Duplicate key error
-        throw new errors.Conflict('Email already taken', { i18n: 'server_error.email_taken' })
+        throw new errors.Conflict('Email already taken', {i18n: 'server_error.email_taken'})
       else
         throw e
 
@@ -325,18 +329,18 @@ module.exports =
       return res.status(200).send(user.toObject({req: req}))
 
     yield Classroom.update(
-      { members: user._id },
-      { $pull: {members: user._id} },
-      { multi: true }
+      {members: user._id},
+      {$pull: {members: user._id}},
+      {multi: true}
     )
 
     yield CourseInstance.update(
-      { members: user._id },
-      { $pull: {members: user._id} },
-      { multi: true }
+      {members: user._id},
+      {$pull: {members: user._id}},
+      {multi: true}
     )
 
-    yield user.update({ $unset: {role: ''}})
+    yield user.update({$unset: {role: ''}})
     user.set('role', undefined)
     return res.status(200).send(user.toObject({req: req}))
 
@@ -350,10 +354,10 @@ module.exports =
       return res.status(200).send(user.toObject({req: req}))
 
     yield TrialRequest.remove(
-      { applicant: user._id },
+      {applicant: user._id},
     )
 
-    yield user.update({ $unset: {role: ''}})
+    yield user.update({$unset: {role: ''}})
     user.set('role', undefined)
     return res.status(200).send(user.toObject({req: req}))
 
@@ -362,14 +366,14 @@ module.exports =
     user = req.user
     lastAchievementChecked = user.get('lastAchievementChecked') or user._id.getTimestamp().toISOString()
     checkTimestamp = new Date().toISOString()
-    achievement = yield Achievement.findOne({ updated: { $gt: lastAchievementChecked }}).sort({updated:1})
+    achievement = yield Achievement.findOne({updated: {$gt: lastAchievementChecked}}).sort({updated: 1})
 
     if not achievement
-      userUpdate = { 'lastAchievementChecked': checkTimestamp }
+      userUpdate = {'lastAchievementChecked': checkTimestamp}
       yield user.update({$set: userUpdate}).exec()
       return res.send(userUpdate)
 
-    userUpdate = { 'lastAchievementChecked': achievement.get('updated') }
+    userUpdate = {'lastAchievementChecked': achievement.get('updated')}
 
     query = achievement.get('query')
     collection = achievement.get('collection')
@@ -390,7 +394,7 @@ module.exports =
       yield user.update({$set: userUpdate}).exec()
       return res.send(userUpdate)
 
-    earned = yield EarnedAchievement.findOne({ achievement: achievement.id, user: req.user.id })
+    earned = yield EarnedAchievement.findOne({achievement: achievement.id, user: req.user.id})
     yield EarnedAchievement.upsertFor(achievement, trigger, earned, req.user)
     yield user.update({$set: userUpdate})
     user = yield User.findById(user.id).select({points: 1, earned: 1})
@@ -398,7 +402,7 @@ module.exports =
 
 
   adminSearch: wrap (req, res, next) ->
-    { adminSearch } = req.query
+    {adminSearch} = req.query
     return next() unless adminSearch
 
     unless req.user
@@ -425,8 +429,8 @@ module.exports =
     # TODO: Surface on the Admin page when users match these submissions
     githubSubmission = yield CLASubmission.findOne({githubUsername: adminSearch})
     if githubSubmission
-      query.$or.push { _id: mongoose.Types.ObjectId(githubSubmission.get('user')) }
-      query.$or = [{ _id: mongoose.Types.ObjectId(githubSubmission.get('user')) }]
+      query.$or.push {_id: mongoose.Types.ObjectId(githubSubmission.get('user'))}
+      query.$or = [{_id: mongoose.Types.ObjectId(githubSubmission.get('user'))}]
 
     users = yield User.find(query).select(projection)
 
@@ -451,18 +455,21 @@ module.exports =
         users = users.concat(yield User.find({emailLower: {$regex: '^' + searchParts[0]}}).limit(50).select(projection))
 
     users = _.uniq(users, false, (u) -> u.id)
-    
+
     teachers = (user for user in users when user?.isTeacher())
-    trialRequests = yield TrialRequest.find({applicant: $in: (teacher._id for teacher in teachers)})
+    trialRequests = yield TrialRequest.find({
+      applicant:
+        $in: (teacher._id for teacher in teachers)
+    })
     trialRequestMap = _.zipObject([t.get('applicant').toString(), t.toObject()] for t in trialRequests)
-    
+
     toSend = _.map(users, (user) =>
       userObject = user.toObject()
       trialRequest = trialRequestMap[user.id]
       if trialRequest
         userObject._trialRequest = _.pick(trialRequest.properties, 'organization', 'district', 'nces_name', 'nces_district')
       return userObject
-    )    
+    )
     res.send(toSend)
 
 
@@ -488,7 +495,7 @@ module.exports =
       filters.push 'role = ?'
 
     mysqlq = "SELECT *, WEIGHT() as skey FROM user WHERE #{filters.join(' AND ')}  LIMIT 100;"
-    connection.queryAsync = Promise.promisify(connection.query, {multiArgs:true})
+    connection.queryAsync = Promise.promisify(connection.query, {multiArgs: true})
     [rows, fields] = yield connection.queryAsync(mysqlq, params)
     ids = rows.map (r) -> mongoose.Types.ObjectId(r.mongoid)
     connection.end()
@@ -541,12 +548,12 @@ module.exports =
 
     if thang = user.get('heroConfig')?.thangType
       fallback ?= "/file/db/thang.type/#{thang}/portrait.png"
-      
+
     fallback ?= makeHostUrl(req, '/file/db/thang.type/52a00d55cf1818f2be00000b/portrait.png')
     unless /^http/.test fallback
       fallback = makeHostUrl(req, fallback)
     combinedPhotoURL = "https://secure.gravatar.com/avatar/#{emailHash}?s=#{size}&default=#{encodeURI(encodeURI(fallback))}"
-    
+
     res.redirect(combinedPhotoURL)
     res.end()
 
@@ -555,24 +562,24 @@ module.exports =
     user = yield database.getDocFromHandle(req, User)
     if not user
       throw new errors.NotFound('User not found')
-      
+
     unless req.user.isAdmin() or req.user.id is user.id
       throw new errors.Forbidden()
-      
+
     if user.isTeacher()
-      query = { ownerID: req.user._id }
+      query = {ownerID: req.user._id}
     else
-      query = { members: req.user._id }
-      
+      query = {members: req.user._id}
+
     if req.query.campaignSlug
-      campaign = yield Campaign.findBySlug(req.query.campaignSlug).select({_id:1})
+      campaign = yield Campaign.findBySlug(req.query.campaignSlug).select({_id: 1})
       if not campaign
         throw new errors.NotFound('Campaign not found')
 
       campaignID = campaign._id
-      course = yield Course.findOne({ campaignID }).select({_id: 1})
+      course = yield Course.findOne({campaignID}).select({_id: 1})
       query.courseID = course._id
-      
+
     dbq = CourseInstance.find(query)
     dbq.limit(parse.getLimitFromReq(req))
     dbq.skip(parse.getSkipFromReq(req))

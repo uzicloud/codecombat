@@ -24,7 +24,8 @@ var goalStates;
 var createFailed;
 
 var allowedOrigins = [
-    /^https?:\/\/(.*\.)?codecombat\.com$/,
+    /^https?:\/\/(.*\.)?codecombat\.vip$/,
+    /^https?:\/\/(.*\.)?uzicloud\.com$/,
     /^https?:\/\/localhost:[\d]+$/, // For local development
     /^https?:\/\/10.0.2.2:[\d]+$/, // For local virtual machines
     /^https?:\/\/coco\.code\.ninja$/,

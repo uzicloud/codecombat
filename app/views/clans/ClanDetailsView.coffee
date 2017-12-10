@@ -71,7 +71,7 @@ module.exports = class ClanDetailsView extends RootView
     context.clan = @clan
     context.conceptsProgression = @conceptsProgression ? []
     if application.isProduction()
-      context.joinClanLink = "https://codecombat.com/clans/#{@clanID}"
+      context.joinClanLink = "https://codecombat.vip/clans/#{@clanID}"
     else
       context.joinClanLink = "http://localhost:3000/clans/#{@clanID}"
     context.owner = @owner
