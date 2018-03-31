@@ -61,6 +61,7 @@ Application = {
     )
     store.commit('me/updateUser', me.attributes)
     store.commit('updateFeatures', features)
+    @store = store
 
     @isIPadApp = webkit?.messageHandlers? and navigator.userAgent?.indexOf('CodeCombat-iPad') isnt -1
     $('body').addClass 'ipad' if @isIPadApp
@@ -75,6 +76,7 @@ Application = {
     preferredLanguage = me.get('preferredLanguage') or 'en'
     $(document).bind 'keydown', preventBackspace
     preload(COMMON_FILES)
+    moment.relativeTimeThreshold('ss', 1) # do not return 'a few seconds' when calling 'humanize' 
     CocoModel.pollAchievements()
     unless me.get('anonymous')
       # TODO: Remove logging later, once this system has proved stable

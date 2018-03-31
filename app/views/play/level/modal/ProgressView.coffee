@@ -4,6 +4,7 @@ utils = require 'core/utils'
 urls = require 'core/urls'
 
 module.exports = class ProgressView extends CocoView
+  # TODO: Clean up what was moved to CourseVictoryComponent
 
   id: 'progress-view'
   className: 'modal-content'
@@ -12,6 +13,7 @@ module.exports = class ProgressView extends CocoView
   events:
     'click #done-btn': 'onClickDoneButton'
     'click #next-level-btn': 'onClickNextLevelButton'
+    'click #start-challenge-btn': 'onClickStartChallengeButton'
     'click #map-btn': 'onClickMapButton'
     'click #ladder-btn': 'onClickLadderButton'
     'click #publish-btn': 'onClickPublishButton'
@@ -22,6 +24,7 @@ module.exports = class ProgressView extends CocoView
     @course = options.course
     @classroom = options.classroom #not guaranteed to exist (eg. when teacher is playing)
     @nextLevel = options.nextLevel
+    @nextAssessment = options.nextAssessment
     @levelSessions = options.levelSessions
     @session = options.session
     @courseInstanceID = options.courseInstanceID
@@ -29,6 +32,8 @@ module.exports = class ProgressView extends CocoView
     # Images in Markdown are like ![description](url)
     @nextLevel.get('description', true)  # Make sure the defaults are available
     @nextLevelDescription = marked(utils.i18n(@nextLevel.attributesWithDefaults, 'description').replace(/!\[.*?\]\(.*?\)\n*/g, ''))
+    @nextAssessment.get('description', true)  # Make sure the defaults are available
+    @nextAssessmentDescription = marked(utils.i18n(@nextAssessment.attributesWithDefaults, 'description').replace(/!\[.*?\]\(.*?\)\n*/g, ''))
     if @level.isProject()
       @shareURL = urls.playDevLevel({@level, @session, @course})
 
@@ -37,6 +42,9 @@ module.exports = class ProgressView extends CocoView
 
   onClickNextLevelButton: ->
     @trigger 'next-level'
+
+  onClickStartChallengeButton: ->
+    @trigger 'start-challenge'
 
   onClickPublishButton: ->
     @trigger 'publish'

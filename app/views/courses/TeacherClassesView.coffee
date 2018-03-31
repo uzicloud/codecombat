@@ -11,15 +11,23 @@ CourseInstance = require 'models/CourseInstance'
 CourseInstances = require 'collections/CourseInstances'
 ClassroomSettingsModal = require 'views/courses/ClassroomSettingsModal'
 CourseNagSubview = require 'views/teachers/CourseNagSubview'
-InviteToClassroomModal = require 'views/courses/InviteToClassroomModal'
 Prepaids = require 'collections/Prepaids'
 User = require 'models/User'
 utils = require 'core/utils'
+storage = require 'core/storage'
 
 helper = require 'lib/coursesHelper'
 
 translateWithMarkdown = (label) ->
   marked.inlineLexer $.i18n.t(label), []
+
+# TODO: if this proves useful, make a simple admin page with a Treema for editing office hours in db
+officeHours = [
+  {time: moment('2018-02-28 12:00-08').toDate(), link: 'https://zoom.us/meeting/register/307c335ddb1ee6ef7510d14dfea9e911', host: 'David', name: 'CodeCombat for Beginner Teachers'}
+  {time: moment('2018-03-07 12:00-08').toDate(), link: 'https://zoom.us/meeting/register/a1a6f5f4eb7a0a387c24e00bf0acd2b8', host: 'Nolan', name: 'CodeCombat: Beyond Block-Based Coding'}
+  {time: moment('2018-03-15 12:30-08').toDate(), link: 'https://zoom.us/meeting/register/16f0a6b4122087667c24e00bf0acd2b8', host: 'Sean', name: 'Building Student Engagement with CodeCombat'}
+  {time: moment('2018-03-21 12:00-08').toDate(), link: 'https://zoom.us/meeting/register/4e7eb093f8689e21c5b9141539e44ee6', host: 'Liz', name: 'CodeCombat for Beginner Teachers'}
+]
 
 module.exports = class TeacherClassesView extends RootView
   id: 'teacher-classes-view'
@@ -79,13 +87,15 @@ module.exports = class TeacherClassesView extends RootView
     'click .edit-classroom': 'onClickEditClassroom'
     'click .archive-classroom': 'onClickArchiveClassroom'
     'click .unarchive-classroom': 'onClickUnarchiveClassroom'
-    'click .add-students-btn': 'onClickAddStudentsButton'
     'click .create-classroom-btn': 'openNewClassroomModal'
     'click .create-teacher-btn': 'onClickCreateTeacherButton'
     'click .update-teacher-btn': 'onClickUpdateTeacherButton'
     'click .view-class-btn': 'onClickViewClassButton'
     'click .see-all-quests': 'onClickSeeAllQuests'
     'click .see-less-quests': 'onClickSeeLessQuests'
+    'click .see-all-office-hours': 'onClickSeeAllOfficeHours'
+    'click .see-less-office-hours': 'onClickSeeLessOfficeHours'
+    'click .see-no-office-hours': 'onClickSeeNoOfficeHours'
 
   getTitle: -> $.i18n.t 'teacher.my_classes'
 
@@ -106,6 +116,7 @@ module.exports = class TeacherClassesView extends RootView
           helper.calculateDots(@classrooms, @courses, @courseInstances)
           @calculateQuestCompletion()
           @render()
+
     window.tracker?.trackEvent 'Teachers Classes Loaded', category: 'Teachers', ['Mixpanel']
 
     @courses = new Courses()
@@ -118,6 +129,11 @@ module.exports = class TeacherClassesView extends RootView
     @progressDotTemplate = require 'templates/teachers/hovers/progress-dot-whole-course'
     @prepaids = new Prepaids()
     @supermodel.trackRequest @prepaids.fetchByCreator(me.id)
+
+    earliestHourTime = new Date() - 60 * 60 * 1000
+    latestHourTime = new Date() - -21 * 24 * 60 * 60 * 1000
+    @upcomingOfficeHours = _.sortBy (oh for oh in officeHours when earliestHourTime < oh.time < latestHourTime), 'time'
+    @howManyOfficeHours = if storage.load('hide-office-hours') then 'none' else 'some'
 
     # Level Sessions loaded after onLoaded to prevent race condition in calculateDots
 
@@ -210,16 +226,6 @@ module.exports = class TeacherClassesView extends RootView
     window.tracker?.trackEvent $(e.target).data('event-action'), category: 'Teachers', ['Mixpanel']
     application.router.navigate("/teachers/update-account", { trigger: true })
 
-  onClickAddStudentsButton: (e) ->
-    window.tracker?.trackEvent 'Teachers Classes Add Students Started', category: 'Teachers', ['Mixpanel']
-    classroomID = $(e.currentTarget).data('classroom-id')
-    classroom = @classrooms.get(classroomID)
-    modal = new InviteToClassroomModal({ classroom: classroom })
-    @openModalView(modal)
-    @listenToOnce modal, 'hide', ->
-      @render()
-      @calculateQuestCompletion()
-
   onClickArchiveClassroom: (e) ->
     return unless me.id is @teacherID # Viewing page as admin
     classroomID = $(e.currentTarget).data('classroom-id')
@@ -275,3 +281,16 @@ module.exports = class TeacherClassesView extends RootView
     $(e.target).hide()
     @$el.find('.see-all-quests').show()
     @$el.find('.quest.hide-revealed').addClass('hide').removeClass('hide-revealed')
+
+  onClickSeeAllOfficeHours: (e) ->
+    @howManyOfficeHours = 'all'
+    @renderSelectors '#office-hours'
+
+  onClickSeeLessOfficeHours: (e) ->
+    @howManyOfficeHours = 'some'
+    @renderSelectors '#office-hours'
+
+  onClickSeeNoOfficeHours: (e) ->
+    @howManyOfficeHours = 'none'
+    @renderSelectors '#office-hours'
+    storage.save 'hide-office-hours', true

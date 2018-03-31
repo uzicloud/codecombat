@@ -5,7 +5,7 @@
 #loading-details.loading-container
 
   .level-loading-goals.secret.rtl-allowed
-    .goals-title(data-i18n="play_level.goals") Goals
+    .goals-title(data-i18n=view.goalHeaderTransationKey) Goals
     ul.list-unstyled(dir="auto")
 
   .errors
@@ -13,10 +13,10 @@
   .intro-doc.hidden
     .nano
       .nano-content
-        .intro-doc-content
+        .intro-doc-content(dir="auto")
 
   .progress-or-start-container
-    button.start-level-button.btn.btn-lg.btn-success.btn-illustrated.header-font.needsclick(data-i18n="play_level.loading_start") Start Level
+    button.start-level-button.btn.btn-lg.btn-success.btn-illustrated.header-font.needsclick(data-i18n=view.buttonTranslationKey) Start Level
 
     .load-progress
       .progress

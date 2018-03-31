@@ -17,6 +17,7 @@ CodeLog = require 'models/CodeLog'
 Autocomplete = require './editor/autocomplete'
 TokenIterator = ace.require('ace/token_iterator').TokenIterator
 LZString = require 'lz-string'
+utils = require 'core/utils'
 
 module.exports = class SpellView extends CocoView
   id: 'spell-view'
@@ -233,7 +234,7 @@ module.exports = class SpellView extends CocoView
         if @aceSession.selection.isEmpty()
           cursor = @ace.getCursorPosition()
           line = @aceDoc.getLine(cursor.row)
-          if delimMatch = line.substring(cursor.column).match /^(["|']?\)+;?)/  # Yay for editors misreading regexes: "
+          if delimMatch = line.substring(cursor.column).match /^(["|']?\)+;?)/
             newRange = @ace.getSelectionRange()
             newRange.setStart newRange.start.row, newRange.start.column + delimMatch[1].length
             newRange.setEnd newRange.end.row, newRange.end.column + delimMatch[1].length
@@ -600,8 +601,8 @@ module.exports = class SpellView extends CocoView
     # @addAutocompleteSnippets()
     @highlightCurrentLine()
 
-  cast: (preload=false, realTime=false, justBegin=false) ->
-    Backbone.Mediator.publish 'tome:cast-spell', { @spell, @thang, preload, realTime, justBegin }
+  cast: (preload=false, realTime=false, justBegin=false, cinematic=false) ->
+    Backbone.Mediator.publish 'tome:cast-spell', { @spell, @thang, preload, realTime, justBegin, cinematic }
 
   notifySpellChanged: =>
     return if @destroyed
@@ -620,7 +621,7 @@ module.exports = class SpellView extends CocoView
     return if @destroyed
     lineCount = @aceDoc.getLength()
     lastLine = @aceDoc.$lines[lineCount - 1]
-    if lastLine isnt ''
+    if /\S/.test lastLine
       cursorPosition = @ace.getCursorPosition()
       wasAtEnd = cursorPosition.row is lineCount - 1 and cursorPosition.column is lastLine.length
       @aceDoc.insertNewLine row: lineCount, column: 0  #lastLine.length
@@ -682,8 +683,14 @@ module.exports = class SpellView extends CocoView
       @saveSpadeTimeout = null
 
   onManualCast: (e) ->
+    cinematic = @options.level.isType('hero', 'hero-ladder', 'course-ladder')
+    cinematic = false if me.isStudent() and not @options.level.isType('course-ladder')
+    cinematic = false if not me.isStudent() and not me.testCinematicPlayback()
+    cinematic = false if $('#page-container').width() > 1440  # Not really needed on large screens
+    cinematic = false if key.shift  # Temporary? A way to turn it off for testing.
+
     cast = @$el.parent().length
-    @recompile cast, e.realTime
+    @recompile cast, e.realTime, cinematic
     @focus() if cast
     if @options.level.isType('web-dev')
       @sourceAtLastCast = @getSource()
@@ -699,13 +706,13 @@ module.exports = class SpellView extends CocoView
     Backbone.Mediator.publish 'tome:spell-loaded', spell: @spell
     @updateLines()
 
-  recompile: (cast=true, realTime=false) ->
+  recompile: (cast=true, realTime=false, cinematic=false) ->
     hasChanged = @spell.source isnt @getSource()
     if hasChanged
       @spell.transpile @getSource()
       @updateAether true, false
     if cast  #and (hasChanged or realTime)  # just always cast now
-      @cast(false, realTime)
+      @cast(false, realTime, false, cinematic)
     if hasChanged
       @notifySpellChanged()
 
@@ -866,6 +873,9 @@ module.exports = class SpellView extends CocoView
         lineOffsetPx += @aceSession.getRowLength(i) * @ace.renderer.lineHeight
       lineOffsetPx -= @ace.session.getScrollTop()
     Backbone.Mediator.publish 'tome:show-problem-alert', problem: problem, lineOffsetPx: Math.max lineOffsetPx, 0
+    if problem.level not in ['info', 'warning']
+      Backbone.Mediator.publish 'playback:stop-cinematic-playback', {}
+      # TODO: find a way to also show problem alert if it's compile-time, and/or not enter cinematic mode at all
 
   # Gets the number of lines before the start of <script> content in the usercode
   # Because Errors report their line number relative to the <script> tag
@@ -948,7 +958,7 @@ module.exports = class SpellView extends CocoView
     currentLine = _.string.rtrim(@aceDoc.$lines[cursorPosition.row].replace(@singleLineCommentRegex(), ''))  # trim // unless inside "
     endOfLine = cursorPosition.column >= currentLine.length  # just typed a semicolon or brace, for example
     beginningOfLine = not currentLine.substr(0, cursorPosition.column).trim().length  # uncommenting code, for example
-    incompleteThis = /^(s|se|sel|self|t|th|thi|this)$/.test currentLine.trim()
+    incompleteThis = /^(s|se|sel|self|t|th|thi|this|g|ga|gam|game|h|he|her|hero)$/.test currentLine.trim()
     #console.log "finished=#{valid and (endOfLine or beginningOfLine) and not incompleteThis}", valid, endOfLine, beginningOfLine, incompleteThis, cursorPosition, currentLine.length, aether, new Date() - 0, currentLine
     if not incompleteThis and @options.level.isType('game-dev')
       # TODO: Improve gamedev autocast speed
@@ -1161,6 +1171,15 @@ module.exports = class SpellView extends CocoView
         @aceSession.addGutterDecoration start.row, clazz
         @decoratedGutter[start.row] = clazz
         Backbone.Mediator.publish("tome:highlight-line", line:start.row) if application.isIPadApp
+        $cinematicParent = $('#cinematic-code-display')
+        highlightedIndex = 0
+        for sourceLineNumber in [end.row - 3 .. end.row + 3]
+          codeLine = _.string.rtrim @aceDoc.$lines[sourceLineNumber]
+          $codeLineEl = $cinematicParent.find(".code-line-#{highlightedIndex++}")
+          utils.replaceText $codeLineEl.find('.line-number'), if sourceLineNumber >= 0 then sourceLineNumber + 1 else ''
+          utils.replaceText $codeLineEl.find('.indentation'), codeLine.match(/\s*/)[0]
+          utils.replaceText $codeLineEl.find('.code-text'), _.string.trim(codeLine)
+
     @debugView?.setVariableStates {} unless gotVariableStates
     null
 
@@ -1215,6 +1234,9 @@ module.exports = class SpellView extends CocoView
         unless seenAnEntryPoint
           session.addGutterDecoration index, 'next-entry-point'
           seenAnEntryPoint = true
+          unless @hasSetInitialCursor
+            @hasSetInitialCursor = true
+            @ace.navigateTo index, line.match(/\S/)?.index ? line.length
 
         # Shift pointer right based on current indentation
         # TODO: tabs probably need different horizontal offsets than spaces

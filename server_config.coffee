@@ -55,6 +55,9 @@ config.apple =
 config.closeIO =
   apiKey: process.env.COCO_CLOSEIO_API_KEY or ''
 
+config.google =
+  recaptcha_secret_key: process.env.COCO_GOOGLE_RECAPTCHA_SECRET_KEY or ''
+
 config.stripe =
   secretKey: process.env.COCO_STRIPE_SECRET_KEY or 'sk_test_MFnZHYD0ixBbiBuvTlLjl2da'
   
@@ -145,11 +148,10 @@ config.snowplow =
 
 config.buildInfo = { sha: 'dev' }
 
-config.sunburst =
-  email: process.env.COCO_SUNBURST_EMAIL or ''
-
 config.intercom =
   accessToken: process.env.COCO_INTERCOM_ACCESS_TOKEN or 'dGVzdA==' #base64 "test"
+  
+config.apcspFileUrl = process.env.COCO_APCSP_FILE_URL or "http://localhost:#{config.port}/apcsp-local/"
 
 if fs.existsSync path.join(__dirname, '.build_info.json')
   config.buildInfo = JSON.parse fs.readFileSync path.join(__dirname, '.build_info.json'), 'utf8'

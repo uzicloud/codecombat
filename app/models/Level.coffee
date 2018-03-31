@@ -3,13 +3,14 @@ LevelComponent = require './LevelComponent'
 LevelSystem = require './LevelSystem'
 LevelConstants = require 'lib/LevelConstants'
 ThangTypeConstants = require 'lib/ThangTypeConstants'
+utils = require 'core/utils'
 
 # Pure functions for use in Vue
 # First argument is always a raw Level.attributes
 # Accessible via eg. `Level.isProject(levelObj)`
 LevelLib = {
   isProject: (level) ->
-    return level.shareable is 'project'
+    return level?.shareable is 'project'
 }
 
 module.exports = class Level extends CocoModel
@@ -76,7 +77,7 @@ module.exports = class Level extends CocoModel
 
   denormalizeThang: (levelThang, supermodel, session, otherSession, thangTypesByOriginal) ->
     levelThang.components ?= []
-    isHero = /Hero Placeholder/.test(levelThang.id) and @isType('hero', 'hero-ladder', 'hero-coop')
+    isHero = /Hero Placeholder/.test(levelThang.id) and @isType('hero', 'hero-ladder', 'hero-coop') and @get('assessment') isnt 'open-ended'
     if isHero and otherSession
       # If it's a hero and there's another session, find the right session for it.
       # If there is no other session (playing against default code, or on single player), clone all placeholders.
@@ -155,7 +156,7 @@ module.exports = class Level extends CocoModel
         levelThang.components.push placeholderComponent
 
     # Load the user's chosen hero AFTER getting stats from default char
-    if /Hero Placeholder/.test(levelThang.id) and @isType('course') and not @headless and not @sessionless and not window.serverConfig.picoCTF
+    if /Hero Placeholder/.test(levelThang.id) and @isType('course') and not @headless and not @sessionless and not window.serverConfig.picoCTF and @get('assessment') isnt 'open-ended'
       heroThangType = me.get('heroConfig')?.thangType or ThangTypeConstants.heroes.captain
       levelThang.thangType = heroThangType if heroThangType
 
@@ -268,30 +269,24 @@ module.exports = class Level extends CocoModel
         height = c.height if c.height? and c.height > height
     return {width: width, height: height}
 
-  isLadder: ->
-    return @get('type')?.indexOf('ladder') > -1
+  isLadder: -> return Level.isLadder(@attributes)
+    
+  @isLadder: (level) -> level.type?.indexOf('ladder') > -1
 
   isProject: -> Level.isProject(@attributes)
 
   isType: (types...) ->
     return @get('type', true) in types
 
-  fetchNextForCourse: ({ levelOriginalID, courseInstanceID, courseID, sessionID }, options={}) ->
-    if courseInstanceID
-      options.url = "/db/course_instance/#{courseInstanceID}/levels/#{levelOriginalID}/sessions/#{sessionID}/next"
-    else
-      options.url = "/db/course/#{courseID}/levels/#{levelOriginalID}/next"
-    @fetch(options)
-
   getSolutions: ->
     return [] unless hero = _.find (@get("thangs") ? []), id: 'Hero Placeholder'
-    return [] unless plan = _.find(hero.components ? [], (x) -> x.config?.programmableMethods?.plan)?.config.programmableMethods.plan
+    return [] unless plan = _.find(hero.components ? [], (x) -> x?.config?.programmableMethods?.plan)?.config.programmableMethods.plan
     solutions = _.cloneDeep plan.solutions ? []
     for solution in solutions
       try
-        solution.source = _.template(solution.source)(plan.context)
+        solution.source = _.template(solution?.source)(utils.i18n(plan, 'context'))
       catch e
-        console.error "Problem with template and solution comments for", @get('slug'), e
+        console.error "Problem with template and solution comments for '#{@get('slug') or @get('name')}'\n", e
     solutions
 
   getSampleCode: ->
@@ -305,5 +300,19 @@ module.exports = class Level extends CocoModel
       catch e
         console.error "Problem with template and solution comments for", @get('slug'), e
     sampleCode
+
+  @thresholdForScore: ({level, type, score}) ->
+    return null unless levelScoreTypes = level.scoreTypes
+    return null unless levelScoreType = _.find(levelScoreTypes, {type})
+    for threshold in ['gold', 'silver', 'bronze']
+      thresholdValue = levelScoreType.thresholds[threshold]
+      if type in LevelConstants.lowerIsBetterScoreTypes
+        achieved = score <= thresholdValue
+      else
+        achieved = score >= thresholdValue
+      if achieved
+        return threshold
+        
+  isSummative: -> @get('assessment') in ['open-ended', 'cumulative']
 
 _.assign(Level, LevelLib)

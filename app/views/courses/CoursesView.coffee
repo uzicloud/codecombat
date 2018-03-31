@@ -20,6 +20,7 @@ NameLoader = require 'core/NameLoader'
 Campaign = require 'models/Campaign'
 ThangType = require 'models/ThangType'
 utils = require 'core/utils'
+store = require 'core/store'
 
 # TODO: Test everything
 
@@ -37,13 +38,14 @@ module.exports = class CoursesView extends RootView
     'click .view-class-btn': 'onClickViewClass'
     'click .view-levels-btn': 'onClickViewLevels'
     'click .view-project-gallery-link': 'onClickViewProjectGalleryLink'
+    'click .view-challenges-link': 'onClickViewChallengesLink'
 
   getTitle: -> return $.i18n.t('courses.students')
 
   initialize: ->
     @classCodeQueryVar = utils.getQueryVariable('_cc', false)
     @courseInstances = new CocoCollection([], { url: "/db/user/#{me.id}/course_instances", model: CourseInstance})
-    @courseInstances.comparator = (ci) -> return ci.get('classroomID') + utils.orderedCourseIDs.indexOf ci.get('courseID')
+    @courseInstances.comparator = (ci) -> return parseInt(ci.get('classroomID'), 16) + utils.orderedCourseIDs.indexOf ci.get('courseID')
     @listenToOnce @courseInstances, 'sync', @onCourseInstancesLoaded
     @supermodel.loadCollection(@courseInstances, { cache: false })
     @classrooms = new CocoCollection([], { url: "/db/classroom", model: Classroom})
@@ -52,9 +54,8 @@ module.exports = class CoursesView extends RootView
     @ownedClassrooms = new Classrooms()
     @ownedClassrooms.fetchMine({data: {project: '_id'}})
     @supermodel.trackCollection(@ownedClassrooms)
-    @courses = new Courses()
-    @courses.fetch()
-    @supermodel.trackCollection(@courses)
+    @supermodel.addPromiseResource(store.dispatch('courses/fetch'))
+    @store = store
     @originalLevelMap = {}
     @urls = require('core/urls')
 
@@ -63,7 +64,7 @@ module.exports = class CoursesView extends RootView
     defaultHeroOriginal = ThangType.heroes.captain
     heroOriginal = me.get('heroConfig')?.thangType or defaultHeroOriginal
     @hero.url = "/db/thang.type/#{heroOriginal}/version"
-    # @hero.setProjection ['name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','unlockLevelName','i18n']
+    # @hero.setProjection ['name','slug','soundTriggers','featureImages','gems','heroClass','description','components','extendedName','shortName','unlockLevelName','i18n']
     @supermodel.loadModel(@hero, 'hero')
     @listenTo @hero, 'change', -> @render() if @supermodel.finished()
 
@@ -224,7 +225,7 @@ module.exports = class CoursesView extends RootView
     courseID = $(e.target).data('course-id')
     courseInstanceID = $(e.target).data('courseinstance-id')
     window.tracker?.trackEvent 'Students View Levels', category: 'Students', courseID: courseID, courseInstanceID: courseInstanceID, ['Mixpanel']
-    course = @courses.get(courseID)
+    course = store.state.courses.byId[courseID]
     courseInstance = @courseInstances.get(courseInstanceID)
     levelsUrl = @urls.courseWorldMap({course, courseInstance})
     application.router.navigate(levelsUrl, { trigger: true })
@@ -234,3 +235,9 @@ module.exports = class CoursesView extends RootView
     courseInstanceID = $(e.target).data('courseinstance-id')
     window.tracker?.trackEvent 'Students View To Project Gallery View', category: 'Students', courseID: courseID, courseInstanceID: courseInstanceID, ['Mixpanel']
     application.router.navigate("/students/project-gallery/#{courseInstanceID}", { trigger: true })
+
+  onClickViewChallengesLink: (e) ->
+    classroomID = $(e.target).data('classroom-id')
+    courseID = $(e.target).data('course-id')
+    window.tracker?.trackEvent 'Students View To Student Assessments View', category: 'Students', classroomID: classroomID, ['Mixpanel']
+    application.router.navigate("/students/assessments/#{classroomID}##{courseID}", { trigger: true })

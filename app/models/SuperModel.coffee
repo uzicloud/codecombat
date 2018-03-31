@@ -94,6 +94,16 @@ module.exports = class SuperModel extends Backbone.Model
   trackCollection: (collection, value) ->
     res = @addModelResource(collection, '', {}, value)
     res.listen()
+  
+  trackPromise: (promise, value=1) ->
+    res = new Resource('', value)
+    promise.then ->
+      res.markLoaded()
+    promise.catch (err) ->
+      res.error = err
+      res.markFailed()
+    @storeResource(res, value)
+    return promise
     
   trackRequest: (jqxhr, value=1) ->
     res = new Resource('', value)
@@ -199,6 +209,11 @@ module.exports = class SuperModel extends Backbone.Model
     res = new SomethingResource(name, value)
     @storeResource(res, value)
     return res
+    
+  addPromiseResource: (promise, value=1) ->
+    somethingResource = @addSomethingResource('some promise', value)
+    promise.then(() -> somethingResource.markLoaded())
+    promise.catch(() -> somethingResource.markFailed())
 
   checkName: (name) ->
     #if _.isString(name)
@@ -262,7 +277,7 @@ module.exports = class SuperModel extends Backbone.Model
       return resolve(@) if @finished()
       @once 'failed', ({resource}) ->
         jqxhr = resource.jqxhr
-        reject({message: jqxhr.responseJSON?.message or jqxhr.responseText or 'Unknown Error'})
+        reject({message: jqxhr?.responseJSON?.message or jqxhr?.responseText or resource.error or 'Unknown Error'})
       @once 'loaded-all', => resolve(@)
 
 class Resource extends Backbone.Model

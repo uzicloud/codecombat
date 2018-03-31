@@ -81,7 +81,8 @@ module.exports = class User extends CocoModel
 
   isStudent: -> @get('role') is 'student'
 
-  isTeacher: ->
+  isTeacher: (includePossibleTeachers=false) ->
+    return true if includePossibleTeachers and @get('role') is 'possible teacher'  # They maybe haven't created an account but we think they might be a teacher based on behavior
     return @get('role') in ['teacher', 'technology coordinator', 'advisor', 'principal', 'superintendent', 'parent']
 
   isSessionless: ->
@@ -207,6 +208,14 @@ module.exports = class User extends CocoModel
     # Not a constant number of videos available (e.g. could be 0, 1, 3, or 4 currently)
     return 0 unless numVideos > 0
     return me.get('testGroupNumber') % numVideos
+
+  testCinematicPlayback: ->
+    return @shouldTestCinematicPlayback if @shouldTestCinematicPlayback?
+    return true if me.isAdmin()
+    return false if me.isStudent() or me.isTeacher()
+    @shouldTestCinematicPlayback = me.get('testGroupNumber') % 2 is 0
+    application.tracker.identify cinematicPlayback: @shouldTestCinematicPlayback
+    @shouldTestCinematicPlayback
 
   hasSubscription: ->
     return false if me.isStudent() or me.isTeacher()

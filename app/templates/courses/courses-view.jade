@@ -51,7 +51,7 @@ block content
                     span.spr(data-i18n="courses.current_hero")
                   span.current-hero-name= view.hero.getHeroShortName()
                 button.change-hero-btn.btn.btn-lg.btn-forest
-                  span(data-i18n="courses.change_hero")
+                  span(data-i18n="play.change_hero")
 
             if view.classrooms.size()
               br
@@ -79,13 +79,16 @@ block content
                   for courseInstance in courseInstances
 
                     .course-instance-entry.rtl-allowed
-                      - var course = view.courses.get(courseInstance.get('courseID'));
+                      - var course = view.store.state.courses.byId[courseInstance.get('courseID')];
                       h6
-                        span.spr= i18n(course.attributes, 'name')
+                        span.spr= i18n(course, 'name')
                         small
                           a.view-levels-btn(data-course-id=courseInstance.get('courseID'), data-courseinstance-id=courseInstance.id, data-i18n="courses.view_levels")
                           if view.courseInstanceHasProject(courseInstance)
                             a.view-project-gallery-link(data-course-id=courseInstance.get('courseID'), data-courseinstance-id=courseInstance.id, data-i18n="courses.view_project_gallery")
+                          if classroom.hasAssessments({courseId: course._id})
+                            =" "
+                            a.view-challenges-link(data-classroom-id=classroom.id, data-i18n="courses.view_challenges", data-course-id=course._id)
                       +course-instance-body(courseInstance, classroom)
                       .clearfix
 
@@ -108,8 +111,9 @@ block content
 
 
 mixin course-instance-body(courseInstance, classroom)
-  - var course = view.courses.get(courseInstance.get('courseID'));
-  - var stats = classroom.statsForSessions(courseInstance.sessions, course.id);
+  - var course = view.store.state.courses.byId[courseInstance.get('courseID')];
+  - var stats = classroom.statsForSessions(courseInstance.sessions, course._id);
+    
   if stats.levels.done
     .text-success
       span.glyphicon.glyphicon-ok
@@ -142,7 +146,9 @@ mixin course-instance-body(courseInstance, classroom)
   if stats.levels.lastPlayed
     div
       span(data-i18n="courses.last_level")
-      span : #{stats.levels.lastPlayedNumber}.
+      span :
+      if stats.levels.lastPlayedNumber
+        span.spl #{stats.levels.lastPlayedNumber}.
       - var levelNameEnglish = stats.levels.lastPlayed.get('name');
       - var levelWithI18N = view.originalLevelMap[stats.levels.lastPlayed.get('original')];
       - var levelName = levelWithI18N ? i18n(levelWithI18N.attributes, 'name') : levelNameEnglish;

@@ -53,7 +53,7 @@ UserSchema.methods.broadName = ->
   return name if name
   name = @get('name')
   return name if name
-  [emailName, emailDomain] = @get('email').split('@')
+  [emailName, emailDomain] = @get('email').split('@') if @get('email')
   return emailName if emailName
   return 'Anonymous'
 
@@ -84,6 +84,9 @@ UserSchema.methods.isInGodMode = ->
 UserSchema.methods.isAdmin = ->
   p = @get('permissions')
   return p and 'admin' in p
+
+UserSchema.methods.isVerifiedTeacher = ->
+  return Boolean(@get('verifiedTeacher'))
 
 UserSchema.methods.hasPermission = (neededPermissions) ->
   permissions = @get('permissions') or []
@@ -556,12 +559,18 @@ UserSchema.statics.editableProperties = [
   'heroConfig', 'iosIdentifierForVendor', 'siteref', 'referrer', 'schoolName', 'role', 'birthday',
   'enrollmentRequestSent', 'israelId', 'school', 'lastAnnouncementSeen'
 ]
+UserSchema.statics.adminEditableProperties = [
+  'purchased'
+]
 
 UserSchema.statics.serverProperties = ['passwordHash', 'emailLower', 'nameLower', 'passwordReset', 'lastIP']
 UserSchema.statics.candidateProperties = [ 'jobProfile', 'jobProfileApproved', 'jobProfileNotes']
 
 UserSchema.set('toObject', {
   transform: (doc, ret, options) ->
+    if ret.preferredLanguage is null
+      # some users get preferredLanguage of null and it breaks the app for them. Have mongoose replace nulls
+      ret.preferredLanguage = 'en-US'
     req = options.req
     return ret unless req
     publicOnly = options.publicOnly

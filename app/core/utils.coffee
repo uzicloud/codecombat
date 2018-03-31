@@ -476,22 +476,27 @@ createLevelNumberMap = (levels) ->
       levelNumber = i - practiceLevelTotalCount + String.fromCharCode('a'.charCodeAt(0) + practiceLevelCurrentCount)
       practiceLevelTotalCount++
       practiceLevelCurrentCount++
+    else if level.assessment
+      practiceLevelTotalCount++
+      practiceLevelCurrentCount++
+      levelNumber = if level.assessment is 'cumulative' then $.t('play_level.combo_challenge') else $.t('play_level.concept_challenge')
     else
       practiceLevelCurrentCount = 0
     levelNumberMap[level.key] = levelNumber
   levelNumberMap
 
 findNextLevel = (levels, currentIndex, needsPractice) ->
-  # levels = [{practice: true/false, complete: true/false}]
+  # Find next available incomplete level, depending on whether practice is needed
+  # levels = [{practice: true/false, complete: true/false, assessment: true/false}]
   index = currentIndex
   index++
   if needsPractice
     if levels[currentIndex].practice or index < levels.length and levels[index].practice
-      # Needs practice, on practice or next practice, choose next incomplete level
+      # Needs practice, current level is practice or next is practice; return the next incomplete practice-or-normal level
       # May leave earlier practice levels incomplete and reach end of course
-      index++ while index < levels.length and levels[index].complete
+      index++ while index < levels.length and (levels[index].complete or levels[index].assessment)
     else
-      # Needs practice, on required, next required, choose first incomplete level of previous practice chain
+      # Needs practice, current level is required, next level is required; return the first incomplete level of previous practice chain
       index--
       index-- while index >= 0 and not levels[index].practice
       if index >= 0
@@ -501,12 +506,36 @@ findNextLevel = (levels, currentIndex, needsPractice) ->
           index++ while index < levels.length and levels[index].practice and levels[index].complete
           if levels[index].practice and not levels[index].complete
             return index
+      # Last set of practice levels is complete; return the next incomplete normal level instead.
       index = currentIndex + 1
-      index++ while index < levels.length and levels[index].complete
+      index++ while index < levels.length and levels[index].complete and not levels[index].assessment
   else
-    # No practice needed, next required incomplete level
-    index++ while index < levels.length and (levels[index].practice or levels[index].complete)
+    # No practice needed; return the next required incomplete level
+    index++ while index < levels.length and (levels[index].practice or levels[index].complete or levels[index].assessment)
   index
+
+findNextAssessmentForLevel = (levels, currentIndex, needsPractice) ->
+  # Find assessment level immediately after current level (and its practice levels)
+  # Only return assessment if it's the next level
+  # Skip over practice levels unless practice neeeded
+  # levels = [{practice: true/false, complete: true/false, assessment: true/false}]
+  # eg: l*,p,p,a*,a',l,...
+  # given index l*, return index a*
+  # given index a*, return index a'
+  index = currentIndex
+  index++
+  while index < levels.length
+    if levels[index].practice
+      return -1 if needsPractice and not levels[index].complete
+      index++ # It's a practice level but do not need practice, keep looking
+    else if levels[index].assessment
+      return -1 if levels[index].complete
+      return index
+    else if levels[index].complete # It's completed, keep looking
+      index++
+    else # we got to a normal level; we didn't find an assessment for the given level.
+      return -1
+  return -1 # we got to the end of the list and found nothing
 
 needsPractice = (playtime=0, threshold=5) ->
   playtime / 60 > threshold
@@ -633,6 +662,7 @@ module.exports = {
   extractPlayerCodeTag
   filterMarkdownCodeLanguages
   findNextLevel
+  findNextAssessmentForLevel
   formatDollarValue
   functionCreators
   getByPath

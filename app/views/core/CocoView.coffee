@@ -229,7 +229,8 @@ module.exports = class CocoView extends Backbone.View
   # Error handling for loading
   onResourceLoadFailed: (e) ->
     r = e.resource
-    @stopListening @supermodel
+    if r.value
+      @stopListening @supermodel
     return if r.jqxhr?.status is 402 # payment-required failures are handled separately
     @showError(r.jqxhr)
 
@@ -241,7 +242,7 @@ module.exports = class CocoView extends Backbone.View
     if me.isStudent()
       console.error("Student clicked contact modal.")
       return
-    if me.isTeacher()
+    if me.isTeacher(true)
       if application.isProduction()
         window.Intercom?('show')
       else
@@ -303,7 +304,7 @@ module.exports = class CocoView extends Backbone.View
 
   modalClosed: =>
     visibleModal.willDisappear() if visibleModal
-    visibleModal.destroy()
+    visibleModal?.destroy()
     visibleModal = null
     window.currentModal = null
     #$('#modal-wrapper .modal').off 'hidden.bs.modal', @modalClosed
