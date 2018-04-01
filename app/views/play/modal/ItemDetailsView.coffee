@@ -60,7 +60,8 @@ module.exports = class ItemDetailsView extends CocoView
 
   afterRender: ->
     super()
-    @$el.find('.nano:visible').nanoScroller({alwaysVisible: true})
+    if $.nanoScroller
+      @$el.find('.nano:visible').nanoScroller({alwaysVisible: true})
 
   getRenderData: ->
     c = super()

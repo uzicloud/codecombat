@@ -110,13 +110,15 @@ module.exports = class AccountSettingsView extends CocoView
             message = $.i18n.t('account_settings.wrong_password', defaultValue: 'Wrong Password.')
             err = [message: message, property: 'password', formatted: true]
             forms.applyErrorsToForm($form, err)
-            $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+            if $.nanoScroller
+              $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
       setTimeout callback, 100
     else
       message = $.i18n.t('account_settings.wrong_email', defaultValue: 'Wrong Email.')
       err = [message: message, property: 'email', formatted: true]
       forms.applyErrorsToForm($form, err)
-      $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+      if $.nanoScroller
+        $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
 
   deleteAccount: ->
     $.ajax
@@ -183,7 +185,8 @@ module.exports = class AccountSettingsView extends CocoView
     if res?
       console.error 'Couldn\'t save because of validation errors:', res
       forms.applyErrorsToForm(@$el, res)
-      $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+      if $.nanoScroller
+        $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
       return
 
     return unless @user.hasLocalChanges()
@@ -195,7 +198,8 @@ module.exports = class AccountSettingsView extends CocoView
       if res.responseJSON?.property
         errors = res.responseJSON
         forms.applyErrorsToForm(@$el, errors)
-        $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+        if $.nanoScroller
+          $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
       else
         noty
           text: res.responseJSON?.message or res.responseText
@@ -221,7 +225,8 @@ module.exports = class AccountSettingsView extends CocoView
       message = $.i18n.t('account_settings.password_mismatch', defaultValue: 'Password does not match.')
       err = [message: message, property: 'password2', formatted: true]
       forms.applyErrorsToForm(@$el, err)
-      $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+      if $.nanoScroller
+        $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
       return
     if bothThere
       @user.set('password', password1)
@@ -229,7 +234,8 @@ module.exports = class AccountSettingsView extends CocoView
       message = $.i18n.t('account_settings.password_repeat', defaultValue: 'Please repeat your password.')
       err = [message: message, property: 'password2', formatted: true]
       forms.applyErrorsToForm(@$el, err)
-      $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
+      if $.nanoScroller
+        $('.nano').nanoScroller({scrollTo: @$el.find('.has-error')})
 
   grabOtherData: ->
     @$el.find('#name-input').val @suggestedName if @suggestedName

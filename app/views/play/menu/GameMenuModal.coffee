@@ -63,7 +63,8 @@ module.exports = class GameMenuModal extends ModalView
     firstView.$el.addClass 'active'
     firstView.onShown?()
     @playSound 'game-menu-open'
-    @$el.find('.nano:visible').nanoScroller()
+    if $.nanoScroller
+      @$el.find('.nano:visible').nanoScroller()
 
   onTabShown: (e) ->
     @playSound 'game-menu-tab-switch'

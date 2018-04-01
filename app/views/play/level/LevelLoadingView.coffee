@@ -209,7 +209,8 @@ module.exports = class LevelLoadingView extends CocoView
     if @intro
       $intro = @$el.find('.intro-doc')
       $intro.css height: minHeight - $intro.offset().top - @$el.find('.progress-or-start-container').outerHeight() - 30 - 20
-      _.defer -> $intro.find('.nano').nanoScroller alwaysVisible: true
+      if $.nanoScroller
+        _.defer -> $intro.find('.nano').nanoScroller alwaysVisible: true
 
   unveilWings: (duration) ->
     @playSound 'loading-view-unveil', 0.5

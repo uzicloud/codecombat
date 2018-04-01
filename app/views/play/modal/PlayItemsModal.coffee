@@ -128,7 +128,8 @@ module.exports = class PlayItemsModal extends ModalView
     super()
     return unless @supermodel.finished()
     @playSound 'game-menu-open'
-    @$el.find('.nano:visible').nanoScroller({alwaysVisible: true})
+    if $.nanoScroller
+      @$el.find('.nano:visible').nanoScroller({alwaysVisible: true})
     @itemDetailsView = new ItemDetailsView()
     @insertSubView(@itemDetailsView)
     @$el.find("a[href='#item-category-armor']").click()  # Start on armor tab, if it's there.
@@ -185,7 +186,8 @@ module.exports = class PlayItemsModal extends ModalView
   onTabClicked: (e) ->
     @playSound 'game-menu-tab-switch'
     nano = $($(e.target).attr('href')).find('.nano')
-    nano.nanoScroller({alwaysVisible: true})
+    if $.nanoScroller
+      nano.nanoScroller({alwaysVisible: true})
     @paneNanoContent = nano.find('.nano-content')
     @showVisibleItemImages()
 
