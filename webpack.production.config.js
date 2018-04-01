@@ -34,12 +34,30 @@ module.exports = (env) => {
   }),
   devtool: 'source-map', // https://webpack.js.org/configuration/devtool/
   plugins: baseConfig.plugins
+      .concat([new webpack.DefinePlugin({
+          'process.env': {
+              NODE_ENV: '"production"'
+          }
+      }),
+          new webpack.optimize.UglifyJsPlugin({
+              // Eliminate comments
+              comments: false,
+              // Compression specific options
+              compress: {
+                  // remove warnings
+                  warnings: false,
+                  // Drop console statements
+                  drop_console: true
+              }
+          })
+
+      ])
     .concat(commonsPlugins)
     .concat([
       new EventHooksWebpackPlugin({
         done: _.once(() => {
           info = {
-            sha: process.env.GIT_SHA
+            sha: '20180401'
           }
           fs.writeFile('.build_info.json', JSON.stringify(info, null, '  '))
           console.log("\nWrote build information file");
