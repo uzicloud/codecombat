@@ -1,8 +1,8 @@
 global.$ = window.$ = global.jQuery = window.jQuery = require('jquery');
-import 'bootstrap'
-import './app.sass'
+import 'bootstrap';
+import './app.sass';
 
-require('app/vendor.js')
+require('app/vendor.js');
 
 // require.context('app/schemas', true, /.*\.(coffee|jade)/)
 // require.context('app/models', true, /.*\.(coffee|jade)/)
