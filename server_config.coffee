@@ -14,8 +14,8 @@ config.proxy = process.env.COCO_PROXY
 
 config.timeout = parseInt(process.env.COCO_TIMEOUT) or 60*1000
 
-config.chinaDomain = "cn.codecombat.com;ccombat.cn;contributors.codecombat.com"
-config.brazilDomain = "br.codecombat.com;contributors.codecombat.com"
+config.chinaDomain = ""
+config.brazilDomain = ""
 config.port = process.env.COCO_PORT or process.env.COCO_NODE_PORT or process.env.PORT  or 3000
 config.ssl_port = process.env.COCO_SSL_PORT or process.env.COCO_SSL_NODE_PORT or 3443
 config.cloudflare =
@@ -113,7 +113,7 @@ config.mongoQueue =
 config.salt = process.env.COCO_SALT or 'pepper'
 config.cookie_secret = process.env.COCO_COOKIE_SECRET or 'chips ahoy'
 
-config.isProduction = config.mongo.host isnt 'localhost'
+config.isProduction = true #config.mongo.host isnt 'localhost'
 
 # Domains (without subdomain prefix, with port number) for main hostname (usually codecombat.com)
 # and unsafe web-dev iFrame content (usually codecombatprojects.com).
@@ -146,7 +146,7 @@ config.snowplow =
   host: process.env.COCO_SNOWPLOW_HOST or 'host'
   port: process.env.COCO_SNOWPLOW_PORT or 1
 
-config.buildInfo = { sha: 'dev' }
+config.buildInfo = { sha: '20180401' }
 
 config.intercom =
   accessToken: process.env.COCO_INTERCOM_ACCESS_TOKEN or 'dGVzdA==' #base64 "test"
